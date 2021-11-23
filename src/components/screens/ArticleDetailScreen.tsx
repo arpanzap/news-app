@@ -7,7 +7,7 @@ import { moderateScale } from 'react-native-size-matters';
 import { HomeParamList } from '../../models/navigation-params';
 import ImageLoad from 'react-native-image-placeholder';
 import Config from '../../utils/Config';
-import { Log } from '../../utils/Logger';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ArticleDetailScreen = () => {
   type NavigationProp = StackNavigationProp<HomeParamList, 'NewsFeedScreen'>;
@@ -29,7 +29,7 @@ const ArticleDetailScreen = () => {
   };
 
   return (
-    <View style={styles.main_container}>
+    <SafeAreaView style={styles.main_container}>
       <View style={styles.header_container}>
         <TouchableOpacity onPress={onBackPress}>
           <Image
@@ -64,7 +64,7 @@ const ArticleDetailScreen = () => {
           <Text style={styles.description_text}>{content}</Text>
         </ScrollView>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

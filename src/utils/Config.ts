@@ -20,6 +20,7 @@ export default {
     },
     server: {
         base_url: "https://newsapi.org/v2",
-        api_key: "f39806dfac9f459ba675c08ab596b382"
+        // api_key: "f39806dfac9f459ba675c08ab596b382"
+        api_key: "f44caa9bbe09452aa6cb8a0d31444d28"
     },
 }

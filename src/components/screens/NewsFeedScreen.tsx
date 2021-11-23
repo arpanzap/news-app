@@ -4,7 +4,8 @@ import {
   View,
   StyleSheet,
   Text,
-  FlatList
+  FlatList,
+  ActivityIndicator
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { HomeParamList } from '../../models/navigation-params';
@@ -19,6 +20,7 @@ import { executeGetRequest } from '../../utils/fetchUtils';
 import { Log } from '../../utils/Logger';
 import NewsListComp from '../reuse/NewsListComp';
 import LoadingScreen from '../reuse/LoadingScreen';
+import { SafeAreaView } from 'react-native-safe-area-context';
 /**
  *
  * @returns NewsFeed Screen
@@ -33,10 +35,12 @@ const NewsFeedScreen = () => {
   const [articlesList, setArticleList] = useState<IArticle[]>([]);
   const [categories, setCategories] = useState<ICategory[]>(categoriesData)
   const [loading, setLoading] = useState(true)
+  const [loadingNext, setLoadingNext] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
 
   let flatListRef = useRef<FlatList<IArticle> | null>()
-  let page = useRef<number>(1)
+  let page = useRef<number>(0)
   let canLoadMore = useRef<boolean>(true)
 
   const onCategoryPress = (selectedIndex: number) => {
@@ -47,6 +51,19 @@ const NewsFeedScreen = () => {
     navigation.navigate('ArticleDetailScreen', { item });
   };
 
+  function onEndReached() {
+    Log(canLoadMore, "canLoadMore")
+    if (canLoadMore) {
+      setLoadingNext(true)
+      page.current = page.current + 1
+      getNewsListFromApi()
+    }
+  }
+
+  function onRefresh() {
+    setRefreshing(true)
+  }
+
   /**
    * get list form API set to state
    */
@@ -56,28 +73,43 @@ const NewsFeedScreen = () => {
     if (q)
       requestUrl += `&q=${q}`
     try {
-      setLoading(true)
       const response = await executeGetRequest(requestUrl)
+      const updatedArticles = page.current == 0 ? response.response.articles : [...articlesList, ...response.response.articles]
+      canLoadMore.current == updatedArticles.length < response.response.totalResults
+      setArticleList(updatedArticles)
       setLoading(false)
-      const articles = response.response.articles
-      setArticleList(page.current == 1 ? articles : [...articlesList, ...articles])
-      flatListRef.current?.scrollToIndex({ index: 0, animated: true })
+      setLoadingNext(false)
+      setRefreshing(false)
+      if (page.current == 0)
+        flatListRef.current?.scrollToIndex({ index: 0, animated: true })
     } catch (error) {
+      setLoading(false)
+      setLoadingNext(false)
       Log(error, "error")
     }
   };
 
   useEffect(() => {
+    page.current = 0
+    setLoading(true)
     getNewsListFromApi();
   }, [categories]);
 
   useEffect(() => {
-    page.current = 1
+    page.current = 0
     getNewsListFromApi(searchText);
   }, [searchText]);
 
+  useEffect(() => {
+    if (!refreshing) return
+    page.current = 0
+    setSearchText("searchText")
+    setCategories(categories.map((item, index) => { return { ...item, isSelected: index === 0 } }))
+    getNewsListFromApi();
+  }, [refreshing]);
+
   return (
-    <View style={styles.main_container}>
+    <SafeAreaView style={styles.main_container}>
       <Text style={styles.heading_style}>News Feed</Text>
       <DelayInput
         style={styles.text_input_style}
@@ -97,19 +129,24 @@ const NewsFeedScreen = () => {
         })}
       </View>
       <FlatList
+        onRefresh={onRefresh}
+        refreshing={refreshing}
         ref={flatListRef}
         data={articlesList}
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item, index) => index.toString()}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.01}
         renderItem={({ item, index }) => {
           return (
             <NewsListComp onPress={() => onItemClick(item)} item={item} />
           );
         }}
       />
+      {loadingNext ? <ActivityIndicator color={'black'} /> : null}
       {loading && <LoadingScreen />}
       {articlesList?.length == 0 && <EmptyView message={'Data Not Found'} />}
-    </View>
+    </SafeAreaView>
   );
 };
 export default NewsFeedScreen;
@@ -117,7 +154,7 @@ const styles = StyleSheet.create({
   main_container: {
     flex: 1,
     backgroundColor: '#bfdcef',
-    paddingHorizontal: moderateScale(30),
+    paddingHorizontal: moderateScale(20),
 
   },
   text_input_style: {
@@ -129,7 +166,7 @@ const styles = StyleSheet.create({
     marginBottom: moderateScale(10),
   },
   heading_style: {
-    fontSize: moderateScale(24),
+    fontSize: moderateScale(22),
     fontWeight: '700',
     textAlign: 'center',
     paddingVertical: moderateScale(20),
