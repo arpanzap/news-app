@@ -1,0 +1,11 @@
+const CLEAR_ALL = 'CLEAR_ALL';
+const LOADING_STATUS = 'LOADING_STATUS';
+const SET_LIST = 'SET_LIST';
+const AUTH_ERROR = 'AUTH_ERROR';
+
+export {
+    CLEAR_ALL,
+    AUTH_ERROR,
+    LOADING_STATUS,
+    SET_LIST
+}
