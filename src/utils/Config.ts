@@ -19,7 +19,7 @@ export default {
         blue: "#bfdcef"
     },
     server: {
-        base_url: "https://newsapi.org/v2/",
+        base_url: "https://newsapi.org/v2",
         api_key: "f39806dfac9f459ba675c08ab596b382"
     },
 }

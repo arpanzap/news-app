@@ -23,6 +23,7 @@
     "@types/react-redux": "^7.1.20",
     "react": "17.0.2",
     "react-native": "0.66.3",
+    "react-native-debounce-input": "^1.0.5",
     "react-native-gesture-handler": "^1.10.3",
     "react-native-image-placeholder": "^1.0.14",
     "react-native-reanimated": "^2.2.4",

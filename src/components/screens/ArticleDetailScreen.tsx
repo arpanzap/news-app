@@ -28,9 +28,6 @@ const ArticleDetailScreen = () => {
     navigation.goBack();
   };
 
-  Log(description, 'description')
-  Log(content, 'content')
-
   return (
     <View style={styles.main_container}>
       <View style={styles.header_container}>

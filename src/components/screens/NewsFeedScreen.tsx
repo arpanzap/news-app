@@ -2,15 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation } from '@react-navigation/core';
 import {
   View,
-  TextInput,
   StyleSheet,
   Text,
-  FlatList,
-
+  FlatList
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { HomeParamList } from '../../models/navigation-params';
-import { moderateScale, s } from 'react-native-size-matters';
+import { moderateScale } from 'react-native-size-matters';
+import DelayInput from "react-native-debounce-input";
 import CategoryButtonComp from '../reuse/CategoryButtonComp';
 import { EmptyView } from '../reuse/EmptyView';
 import { IArticle, ICategory } from '../../models/types';
@@ -30,19 +29,15 @@ const NewsFeedScreen = () => {
   type NavigationProp = StackNavigationProp<HomeParamList, 'NewsFeedScreen'>;
   const navigation = useNavigation<NavigationProp>();
 
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState<any>('');
   const [articlesList, setArticleList] = useState<IArticle[]>([]);
   const [categories, setCategories] = useState<ICategory[]>(categoriesData)
   const [loading, setLoading] = useState(true)
+
+
   let flatListRef = useRef<FlatList<IArticle> | null>()
   let page = useRef<number>(1)
   let canLoadMore = useRef<boolean>(true)
-
-
-  // Set Input Field Values
-  const onChangeText = (text: string) => {
-    setSearchText(text);
-  };
 
   const onCategoryPress = (selectedIndex: number) => {
     setCategories(categories.map((item, index) => { return { ...item, isSelected: index === selectedIndex } }))
@@ -57,13 +52,15 @@ const NewsFeedScreen = () => {
    */
   const getNewsListFromApi = async (q?: string) => {
     const selectedCategory = categories.filter(item => item.isSelected)
-    let requestUrl = `top-headlines?page=${page}&country=us&category=${selectedCategory[0].name}&apiKey=${Config.server.api_key}`
+    let requestUrl = `top-headlines?page=${page.current}&country=us&category=${selectedCategory[0].name.toLowerCase()}&apiKey=${Config.server.api_key}`
     if (q)
       requestUrl += `&q=${q}`
     try {
+      setLoading(true)
       const response = await executeGetRequest(requestUrl)
       setLoading(false)
-      setArticleList(response.response.articles)
+      const articles = response.response.articles
+      setArticleList(page.current == 1 ? articles : [...articlesList, ...articles])
       flatListRef.current?.scrollToIndex({ index: 0, animated: true })
     } catch (error) {
       Log(error, "error")
@@ -82,13 +79,14 @@ const NewsFeedScreen = () => {
   return (
     <View style={styles.main_container}>
       <Text style={styles.heading_style}>News Feed</Text>
-      <TextInput
+      <DelayInput
         style={styles.text_input_style}
+        minLength={3}
         placeholder="Search here..."
         placeholderTextColor="black"
         value={searchText}
-        onChangeText={onChangeText}></TextInput>
-
+        delayTimeout={200}
+        onChangeText={setSearchText} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
         {categories.map((item, index) => {
           return <CategoryButtonComp
