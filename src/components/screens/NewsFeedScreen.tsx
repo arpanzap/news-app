@@ -21,11 +21,11 @@ import { Log } from '../../utils/Logger';
 import NewsListComp from '../reuse/NewsListComp';
 import LoadingScreen from '../reuse/LoadingScreen';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 /**
  *
  * @returns NewsFeed Screen
  */
-
 const NewsFeedScreen = () => {
 
   type NavigationProp = StackNavigationProp<HomeParamList, 'NewsFeedScreen'>;
@@ -36,11 +36,9 @@ const NewsFeedScreen = () => {
   const [categories, setCategories] = useState<ICategory[]>(categoriesData)
   const [loading, setLoading] = useState(true)
   const [loadingNext, setLoadingNext] = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
-
 
   let flatListRef = useRef<FlatList<IArticle> | null>()
-  let page = useRef<number>(0)
+  let page = useRef<number>(1)
   let canLoadMore = useRef<boolean>(true)
 
   const onCategoryPress = (selectedIndex: number) => {
@@ -52,16 +50,11 @@ const NewsFeedScreen = () => {
   };
 
   function onEndReached() {
-    Log(canLoadMore, "canLoadMore")
     if (canLoadMore) {
       setLoadingNext(true)
       page.current = page.current + 1
       getNewsListFromApi()
     }
-  }
-
-  function onRefresh() {
-    setRefreshing(true)
   }
 
   /**
@@ -74,13 +67,12 @@ const NewsFeedScreen = () => {
       requestUrl += `&q=${q}`
     try {
       const response = await executeGetRequest(requestUrl)
-      const updatedArticles = page.current == 0 ? response.response.articles : [...articlesList, ...response.response.articles]
+      const updatedArticles = page.current == 1 ? response.response.articles : [...articlesList, ...response.response.articles]
       canLoadMore.current == updatedArticles.length < response.response.totalResults
       setArticleList(updatedArticles)
       setLoading(false)
       setLoadingNext(false)
-      setRefreshing(false)
-      if (page.current == 0)
+      if (page.current == 1)
         flatListRef.current?.scrollToIndex({ index: 0, animated: true })
     } catch (error) {
       setLoading(false)
@@ -90,23 +82,16 @@ const NewsFeedScreen = () => {
   };
 
   useEffect(() => {
-    page.current = 0
+    page.current = 1
+    setSearchText('')
     setLoading(true)
     getNewsListFromApi();
   }, [categories]);
 
   useEffect(() => {
-    page.current = 0
+    page.current = 1
     getNewsListFromApi(searchText);
   }, [searchText]);
-
-  useEffect(() => {
-    if (!refreshing) return
-    page.current = 0
-    setSearchText("searchText")
-    setCategories(categories.map((item, index) => { return { ...item, isSelected: index === 0 } }))
-    getNewsListFromApi();
-  }, [refreshing]);
 
   return (
     <SafeAreaView style={styles.main_container}>
@@ -129,8 +114,6 @@ const NewsFeedScreen = () => {
         })}
       </View>
       <FlatList
-        onRefresh={onRefresh}
-        refreshing={refreshing}
         ref={flatListRef}
         data={articlesList}
         showsHorizontalScrollIndicator={false}
