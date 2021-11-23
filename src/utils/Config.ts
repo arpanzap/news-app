@@ -14,9 +14,12 @@ export default {
         error_auth: "Your account is being used in another device.",
         error_block: "Your account has blocked.For more info, Please contact store-admin",
     },
-
+    colors: {
+        green: "#a0c1b0",
+        blue: "#bfdcef"
+    },
     server: {
-        base_url: "https://newsapi.org/v2/"
-
+        base_url: "https://newsapi.org/v2/",
+        api_key: "f39806dfac9f459ba675c08ab596b382"
     },
 }

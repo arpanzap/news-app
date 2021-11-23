@@ -5,6 +5,7 @@ import {
   HomeParamList,
 } from '../models/navigation-params';
 import NewsFeedScreen from "../components/screens/NewsFeedScreen"
+import ArticleDetailScreen from "../components/screens/ArticleDetailScreen"
 import { navigationRef } from './RootNavigation';
 const AppStack = createStackNavigator<HomeParamList>();
 
@@ -13,6 +14,7 @@ const navigation = () => {
     <NavigationContainer ref={navigationRef}>
       <AppStack.Navigator screenOptions={{ headerShown: false }}>
         <AppStack.Screen name="NewsFeedScreen" component={NewsFeedScreen} />
+        <AppStack.Screen name="ArticleDetailScreen" component={ArticleDetailScreen} />
       </AppStack.Navigator>
     </NavigationContainer>
   );

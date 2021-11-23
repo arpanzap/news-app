@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { moderateScale } from 'react-native-size-matters';
-import Config from '../../utils/Config';
 
 
 
@@ -29,17 +28,19 @@ export const EmptyView = ({ message, style }: Props) => {
 
 export const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    height: Dimensions.get('window').height,
-    width: '100%',
     position: 'absolute',
+    right: 0,
+    left: 0,
+    top: 0,
+    bottom: 0,
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: "transparent"
   },
 
   text: {
     fontSize: moderateScale(14),
     justifyContent: 'center',
     textAlign: 'center',
-
   }
 })

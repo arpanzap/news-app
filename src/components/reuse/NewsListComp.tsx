@@ -1,26 +1,19 @@
 import React from 'react'
 import {
-    View,
     StyleSheet,
     Text,
     TouchableOpacity,
-    Dimensions, Image
 } from 'react-native'
 import { moderateScale } from 'react-native-size-matters';
+import { IArticle } from '../../models/types';
+import ImageLoad from 'react-native-image-placeholder';
+
 /**
  *
  * @returns NewsList Comp
  */
-
-interface item {
-    title: string,
-    publishedAt: string,
-    description: string,
-    urlToImage: string
-}
-
 interface Props {
-    item: item,
+    item: IArticle,
     onPress?: () => void;
 }
 const NewsListComp = ({
@@ -31,12 +24,29 @@ const NewsListComp = ({
     return (
         <TouchableOpacity onPress={onPress}
             style={styles.containerCard}>
-            <Text adjustsFontSizeToFit={true} style={{ ...styles.text, fontWeight: "bold" }}>{item.title}
+            <Text
+                numberOfLines={2}
+                ellipsizeMode={'tail'}
+                style={{
+                    ...styles.text,
+                    fontWeight: "700"
+                }}>{item.title}
             </Text>
-            <Text adjustsFontSizeToFit={true} style={{ ...styles.text, color: "grey", }}>{item.publishedAt}
+            <Text adjustsFontSizeToFit={true} style={{
+                ...styles.text,
+                color: "grey",
+            }}>{new Date(item.publishedAt).toDateString()}
             </Text>
-            <Image source={{ uri: item.urlToImage }} style={styles.img_style}></Image>
-            <Text adjustsFontSizeToFit={true} style={{ ...styles.text }}>{item.description}
+            <ImageLoad
+                resizeMode={"stretch"}
+                style={styles.img_style}
+                source={{ uri: item.urlToImage }}
+            >
+            </ImageLoad>
+            <Text
+                numberOfLines={4}
+                ellipsizeMode={'tail'}
+                style={{ ...styles.text }}>{item.description}
             </Text>
         </TouchableOpacity>
 
@@ -45,10 +55,7 @@ const NewsListComp = ({
 export default NewsListComp
 const styles = StyleSheet.create({
     containerCard: {
-        width: Dimensions.get('window').width - 65,
-        borderRadius: moderateScale(14),
-        borderColor: "grey",
-        borderWidth: StyleSheet.hairlineWidth,
+        borderRadius: moderateScale(10),
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
@@ -57,20 +64,21 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 3.9,
         elevation: 2,
-        marginVertical: moderateScale(18),
-        padding: moderateScale(10),
+        marginVertical: moderateScale(10),
+        padding: moderateScale(5),
         backgroundColor: "white",
         alignItems: "center"
-
     },
     text: {
         padding: moderateScale(5),
-        color: "black"
+        color: "black",
+        fontSize: moderateScale(15)
     },
     img_style: {
         aspectRatio: 1.7,
         width: "95%",
         borderRadius: moderateScale(10),
+        overflow: "hidden",
         borderWidth: StyleSheet.hairlineWidth,
         marginVertical: moderateScale(10)
     }

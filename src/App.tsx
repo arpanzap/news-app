@@ -1,16 +1,7 @@
-/*
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
-
-
-import React, { useEffect } from 'react';
+import React from 'react';
 import Routes from './navigation'
 import { Provider } from 'react-redux';
-import store, { RootState } from './redux';
+import store from './redux';
 import { persistStore } from 'redux-persist';
 import { PersistGate } from 'redux-persist/integration/react';
 /**

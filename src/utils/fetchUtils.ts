@@ -17,7 +17,6 @@ export const executeGetRequest = async (endpoint: string, token?: string) => {
       headers: getAPIHeader(token),
     });
     logResponse(res);
-
     if (res.status != 200) {
       return {
         code: res.status,

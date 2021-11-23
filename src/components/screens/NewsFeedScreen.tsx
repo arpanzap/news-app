@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation } from '@react-navigation/core';
 import {
   View,
@@ -6,100 +6,111 @@ import {
   StyleSheet,
   Text,
   FlatList,
+
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { HomeParamList } from '../../models/navigation-params';
-import { moderateScale } from 'react-native-size-matters';
+import { moderateScale, s } from 'react-native-size-matters';
 import CategoryButtonComp from '../reuse/CategoryButtonComp';
-import Config from '../../utils/Config';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../redux';
 import { EmptyView } from '../reuse/EmptyView';
+import { IArticle, ICategory } from '../../models/types';
+import { categoriesData } from '../../utils/common';
+import Config from '../../utils/Config';
+import { executeGetRequest } from '../../utils/fetchUtils';
+import { Log } from '../../utils/Logger';
 import NewsListComp from '../reuse/NewsListComp';
+import LoadingScreen from '../reuse/LoadingScreen';
 /**
  *
  * @returns NewsFeed Screen
  */
 
 const NewsFeedScreen = () => {
+
   type NavigationProp = StackNavigationProp<HomeParamList, 'NewsFeedScreen'>;
   const navigation = useNavigation<NavigationProp>();
-  const [searchText, setSearchText] = useState('');
-  const [newsList, setnewsList] = useState([]);
-  const dispatch = useDispatch();
 
-  const loadingStatus = useSelector(
-    (state: RootState) => state.loadingReducer.loadingStatus,
-  );
-  // const dataList = useSelector((state: RootState) => state.persistedReducer.List);
+  const [searchText, setSearchText] = useState('');
+  const [articlesList, setArticleList] = useState<IArticle[]>([]);
+  const [categories, setCategories] = useState<ICategory[]>(categoriesData)
+  const [loading, setLoading] = useState(true)
+  let flatListRef = useRef<FlatList<IArticle> | null>()
+  let page = useRef<number>(1)
+  let canLoadMore = useRef<boolean>(true)
+
 
   // Set Input Field Values
   const onChangeText = (text: string) => {
     setSearchText(text);
   };
 
-  const onItemClick = (item: any) => {
-    navigation.navigate('ArticleDetailScreen', item);
+  const onCategoryPress = (selectedIndex: number) => {
+    setCategories(categories.map((item, index) => { return { ...item, isSelected: index === selectedIndex } }))
+  }
+
+  const onItemClick = (item: IArticle) => {
+    navigation.navigate('ArticleDetailScreen', { item });
   };
 
   /**
    * get list form API set to state
    */
-  const onNewsList = async () => {
-    // const res: any = await dispatch(getList())
-    // if (res.code == 200) {
-    //     setnewsList(res.data)
-
-    // }
-    let response = await fetch(
-      'https://newsapi.org/v2/everything?q=tesla&from=today&sortBy=publishedAt&apiKey=2a88da57240541808060b7ea64f79dc7',
-    );
-
-    let json = await response.json();
-
-    setnewsList(json.articles);
-    return json;
+  const getNewsListFromApi = async (q?: string) => {
+    const selectedCategory = categories.filter(item => item.isSelected)
+    let requestUrl = `top-headlines?page=${page}&country=us&category=${selectedCategory[0].name}&apiKey=${Config.server.api_key}`
+    if (q)
+      requestUrl += `&q=${q}`
+    try {
+      const response = await executeGetRequest(requestUrl)
+      setLoading(false)
+      setArticleList(response.response.articles)
+      flatListRef.current?.scrollToIndex({ index: 0, animated: true })
+    } catch (error) {
+      Log(error, "error")
+    }
   };
 
   useEffect(() => {
-    onNewsList();
-  }, []);
+    getNewsListFromApi();
+  }, [categories]);
+
+  useEffect(() => {
+    page.current = 1
+    getNewsListFromApi(searchText);
+  }, [searchText]);
+
   return (
     <View style={styles.main_container}>
-      <View style={{ flex: 0.9 }}>
-        <Text style={styles.heading_style}>News Feed</Text>
-        <TextInput
-          style={styles.text_input_style}
-          placeholder="Search here..."
-          placeholderTextColor="black"
-          value={searchText}
-          onChangeText={onChangeText}></TextInput>
+      <Text style={styles.heading_style}>News Feed</Text>
+      <TextInput
+        style={styles.text_input_style}
+        placeholder="Search here..."
+        placeholderTextColor="black"
+        value={searchText}
+        onChangeText={onChangeText}></TextInput>
 
-        <View style={styles.common_view}>
-          <CategoryButtonComp title={Config.Strings.entertainment} />
-          <CategoryButtonComp title={Config.Strings.general} />
-          <CategoryButtonComp title={Config.Strings.business} />
-        </View>
-
-        <View style={styles.common_view}>
-          <CategoryButtonComp title={Config.Strings.health} />
-          <CategoryButtonComp title={Config.Strings.sport} />
-          <CategoryButtonComp title={Config.Strings.science} />
-        </View>
-        <CategoryButtonComp title={Config.Strings.technology} />
-
-        <FlatList
-          data={newsList}
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item, index }) => {
-            return (
-              <NewsListComp onPress={() => onItemClick(item)} item={item} />
-            );
-          }}
-        />
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+        {categories.map((item, index) => {
+          return <CategoryButtonComp
+            onPress={() => onCategoryPress(index)}
+            key={item.name}
+            item={item}
+          />
+        })}
       </View>
-      {newsList?.length == 0 && <EmptyView message={'no data'} />}
+      <FlatList
+        ref={flatListRef}
+        data={articlesList}
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item, index }) => {
+          return (
+            <NewsListComp onPress={() => onItemClick(item)} item={item} />
+          );
+        }}
+      />
+      {loading && <LoadingScreen />}
+      {articlesList?.length == 0 && <EmptyView message={'Data Not Found'} />}
     </View>
   );
 };
@@ -109,7 +120,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#bfdcef',
     paddingHorizontal: moderateScale(30),
-    justifyContent: 'center',
+
   },
   text_input_style: {
     borderRadius: moderateScale(5),

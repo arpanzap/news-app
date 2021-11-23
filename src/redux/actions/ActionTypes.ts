@@ -1,8 +1,8 @@
-import { Categories } from "../../models/Categories";
+import { ICategory } from "../../models/types";
 
 export interface setListActionType {
   type: string;
-  payload: Categories;
+  payload: ICategory[];
 }
 
 export interface LoadingActionType {
@@ -12,4 +12,4 @@ export interface LoadingActionType {
 
 
 
-export type AppActionTypes = setListActionType | LoadingActionType 
+export type AppActionTypes = setListActionType | LoadingActionType
